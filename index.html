@@ -3,129 +3,152 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/svg+xml" href="ikony/favicon.svg">
-<link rel="apple-touch-icon" href="ikony/apple-touch-icon.png">
 <title>Baza rozwiązań</title>
-<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f4f7f9">
+<meta name="apple-mobile-web-app-title" content="Rozwiązania">
+<link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms"></script>
 <script>
-  tailwind.config = { theme: { extend: { colors: { page: '#f4f7f9' } } } };
+tailwind.config = { theme: { extend: { colors: { page: '#f4f7f9' } } } };
 </script>
+<script src="https://kamilowebski.github.io/hub/apps.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-  ol.kroki { counter-reset: krok; }
-  .krok-nr { counter-increment: krok; }
-  .krok-nr::before { content: counter(krok); }
+ol.kroki { counter-reset: krok; }
+.krok-nr { counter-increment: krok; }
+.krok-nr::before { content: counter(krok); }
 </style>
 </head>
-<body class="bg-page text-slate-800 min-h-screen">
+<body class="min-h-screen bg-page text-sm text-slate-900 antialiased has-[dialog[open]]:overflow-hidden">
 
-<!-- Ekran logowania -->
-<div id="auth" class="hidden max-w-sm mx-auto px-4 py-16">
-  <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-5">
-    <div>
-      <h1 class="text-2xl font-semibold">Baza rozwiązań</h1>
-      <p class="text-sm text-slate-500 mt-1">Zaloguj się, aby zobaczyć swoje rozwiązania.</p>
-    </div>
-    <div id="auth-blad" class="hidden text-sm rounded-lg px-3 py-2 bg-red-50 text-red-700 border border-red-200"></div>
-    <div class="space-y-3">
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1" for="a-email">E-mail</label>
-        <input id="a-email" type="email" autocomplete="email" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1" for="a-haslo">Hasło</label>
-        <input id="a-haslo" type="password" autocomplete="current-password" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-    </div>
-    <button id="a-wyslij" class="w-full rounded-lg px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700">Zaloguj się</button>
-  </div>
-</div>
+<main class="mx-auto max-w-7xl space-y-6 px-4 py-8">
 
-<!-- Aplikacja -->
-<div id="app" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
-  <header class="flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-semibold">Baza rozwiązań</h1>
-      <p id="u-email" class="text-sm text-slate-500"></p>
+  <!-- Nagłówek -->
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-semibold tracking-tight">Baza rozwiązań</h1>
+      <p id="licznik" class="text-sm text-slate-600"></p>
+      <p id="userBox" class="mt-1 flex hidden items-center gap-1.5 text-xs text-slate-600"><svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span id="u-email" class="min-w-0 truncate"></span></p>
     </div>
-    <div class="flex gap-2">
-      <button id="b-dodaj" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
-        Dodaj rozwiązanie
-      </button>
-      <button id="b-wyloguj" class="rounded-lg px-4 py-2 text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">Wyloguj</button>
+    <div class="flex flex-wrap items-center gap-2">
+      <div id="sessionActions" class="flex hidden flex-wrap items-center gap-2">
+        <button id="b-dodaj" type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-blue-600 bg-blue-600 text-white shadow-sm hover:border-blue-700 hover:bg-blue-700"><svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Dodaj</button>
+        <button id="b-wyloguj" type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-slate-300 bg-white text-slate-900 hover:bg-slate-50" title="Wyloguj"><svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="hidden sm:inline">Wyloguj</span></button>
+      </div>
+      <div id="hub-apps"></div>
     </div>
   </header>
 
-  <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 space-y-3">
-    <div class="relative">
-      <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="m20 20-3.5-3.5"/></svg>
-      <input id="szukaj" type="search" placeholder="Szukaj po tytule, maszynie, problemie, krokach, tagach…" class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
+  <!-- Logowanie (widoczne tylko bez sesji) -->
+  <section id="auth" class="mx-auto hidden w-full max-w-md rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    <h2 class="text-lg font-semibold">Logowanie</h2>
+    <p class="mt-1 mb-4 text-sm text-slate-600">Zaloguj się, aby zobaczyć swoje rozwiązania.</p>
+    <div id="auth-blad" class="mb-4 hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert"></div>
+    <div class="mb-4">
+      <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="a-email">E-mail</label>
+      <input id="a-email" type="email" autocomplete="email" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20">
     </div>
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <div id="filtry" class="flex flex-wrap gap-2"></div>
-      <button id="b-zwin" class="text-sm text-blue-600 hover:text-blue-700">Zwiń wszystkie</button>
+    <div class="mb-4">
+      <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="a-haslo">Hasło</label>
+      <input id="a-haslo" type="password" autocomplete="current-password" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20">
+    </div>
+    <button id="a-wyslij" type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-blue-600 bg-blue-600 text-white shadow-sm hover:border-blue-700 hover:bg-blue-700 w-full">Zaloguj się</button>
+  </section>
+
+  <!-- Aplikacja -->
+  <div id="app" class="hidden space-y-6">
+    <section class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4" aria-label="Wyszukiwanie i filtrowanie rozwiązań">
+      <div>
+        <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="szukaj">Szukaj</label>
+        <input id="szukaj" type="search" autocomplete="off" placeholder="Tytuł, maszyna, problem, kroki, tagi…" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20">
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div id="filtry" class="flex flex-wrap gap-1.5" aria-label="Filtr zakresu"></div>
+        <button id="b-zwin" type="button" class="inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[13px] font-medium text-slate-900 transition-colors hover:bg-slate-50">Zwiń wszystkie</button>
+      </div>
+    </section>
+
+    <div id="lista" class="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
+    <div id="pusto" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600"></div>
+  </div>
+</main>
+
+<!-- Modal: rozwiązanie -->
+<dialog id="modal" class="m-auto w-[calc(100%-1rem)] max-w-[560px] max-h-[calc(100dvh-1rem)] rounded-2xl border-0 bg-transparent p-0 text-slate-900 backdrop:bg-slate-900/40 sm:w-[calc(100%-2rem)]">
+  <form id="form" class="max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:p-6">
+    <h2 id="m-tytul" class="mb-5 text-lg font-semibold text-slate-900">Nowe rozwiązanie</h2>
+    <div id="m-blad" class="mb-4 hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert"></div>
+    <div class="mb-4">
+      <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="f-tytul">Tytuł</label>
+      <input id="f-tytul" required maxlength="200" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20">
+    </div>
+    <div class="flex gap-3 max-sm:flex-col max-sm:gap-0 [&>*]:min-w-0 [&>*]:flex-1">
+      <div class="mb-4">
+        <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="f-zakres">Dotyczy</label>
+        <select id="f-zakres" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 pr-8">
+          <option value="ogolne">Ogólne</option>
+          <option value="maszyna">Maszyny</option>
+          <option value="grupa">Grupy maszyn</option>
+        </select>
+      </div>
+      <div id="f-cel-box" class="mb-4">
+        <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="f-cel">Nazwa maszyny / grupy</label>
+        <input id="f-cel" maxlength="120" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20">
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="f-problem">Opis problemu</label>
+      <textarea id="f-problem" rows="3" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 resize-y"></textarea>
+    </div>
+    <div class="mb-4">
+      <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="f-kroki">Kroki do wykonania (jeden w linii)</label>
+      <textarea id="f-kroki" rows="6" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 resize-y"></textarea>
+    </div>
+    <div class="mb-4">
+      <label class="mb-1.5 block text-[13px] font-medium text-slate-900" for="f-tagi">Tagi (oddzielone przecinkami)</label>
+      <input id="f-tagi" maxlength="200" class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20">
+    </div>
+    <div class="mt-6 flex flex-wrap justify-end gap-2 max-sm:[&>button]:flex-auto">
+      <button type="button" id="m-anuluj" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-slate-300 bg-white text-slate-900 hover:bg-slate-50">Anuluj</button>
+      <button type="submit" id="m-zapisz" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-blue-600 bg-blue-600 text-white shadow-sm hover:border-blue-700 hover:bg-blue-700">Zapisz</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Modal: potwierdzenie -->
+<dialog id="cfmModal" class="m-auto w-[calc(100%-1rem)] max-w-[400px] max-h-[calc(100dvh-1rem)] rounded-2xl border-0 bg-transparent p-0 text-slate-900 backdrop:bg-slate-900/40 sm:w-[calc(100%-2rem)]">
+  <div class="rounded-2xl bg-white p-4 shadow-xl sm:p-6">
+    <p id="cfmMsg" class="mb-6 text-sm"></p>
+    <div class="flex flex-wrap justify-end gap-2 max-sm:[&>button]:flex-auto">
+      <button type="button" id="cfmNo" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-slate-300 bg-white text-slate-900 hover:bg-slate-50">Anuluj</button>
+      <button type="button" id="cfmOk" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-red-600 bg-red-600 text-white hover:brightness-95">Usuń</button>
     </div>
   </div>
+</dialog>
 
-  <div id="lista" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 items-start"></div>
-  <div id="pusto" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500"></div>
-</div>
-
-<!-- Modal formularza -->
-<div id="modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 overflow-y-auto">
-  <div class="min-h-full flex items-center justify-center p-4">
-    <form id="form" class="bg-white border border-slate-200 rounded-xl shadow-sm w-full max-w-xl p-6 space-y-4">
-      <h2 id="m-tytul" class="text-lg font-semibold">Nowe rozwiązanie</h2>
-      <div id="m-blad" class="hidden text-sm rounded-lg px-3 py-2 bg-red-50 text-red-700 border border-red-200"></div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1" for="f-tytul">Tytuł</label>
-        <input id="f-tytul" required maxlength="200" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1" for="f-zakres">Dotyczy</label>
-          <select id="f-zakres" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
-            <option value="ogolne">Ogólne</option>
-            <option value="maszyna">Maszyny</option>
-            <option value="grupa">Grupy maszyn</option>
-          </select>
-        </div>
-        <div id="f-cel-box">
-          <label class="block text-sm font-medium text-slate-700 mb-1" for="f-cel">Nazwa maszyny / grupy</label>
-          <input id="f-cel" maxlength="120" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1" for="f-problem">Opis problemu</label>
-        <textarea id="f-problem" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"></textarea>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1" for="f-kroki">Kroki do wykonania (jeden w linii)</label>
-        <textarea id="f-kroki" rows="6" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"></textarea>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1" for="f-tagi">Tagi (po przecinku)</label>
-        <input id="f-tagi" maxlength="200" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button type="button" id="m-anuluj" class="rounded-lg px-4 py-2 text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">Anuluj</button>
-        <button type="submit" id="m-zapisz" class="rounded-lg px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700">Zapisz</button>
-      </div>
-    </form>
-  </div>
-</div>
+<div id="toast" class="pointer-events-none fixed bottom-6 left-1/2 z-[1000] max-w-[calc(100vw-2rem)] -translate-x-1/2 translate-y-4 rounded-lg bg-slate-900 px-4 py-2.5 text-sm text-white opacity-0 shadow-xl transition" role="status" aria-live="polite"></div>
 
 <script>
 // ===== Konfiguracja =====
-const SB_URL = 'https://jccbausmoykoqohfuyqw.supabase.co';   // Supabase > Project Settings > API
-const SB_KEY = 'sb_publishable_xv8yXGbIiF44_6KjWo8uFg_4Mg4PS8P';               // klucz anon (publiczny), NIE service_role
+const SB_URL = 'https://jccbausmoykoqohfuyqw.supabase.co'; // Supabase > Project Settings > API
+const SB_KEY = 'sb_publishable_xv8yXGbIiF44_6KjWo8uFg_4Mg4PS8P'; // klucz publishable (publiczny), NIE service_role
 const TABELA = 'rozwiazania';
 const LS_FILTR = 'baza_rozwiazan_filtr';
+
+// klasy wspólnych komponentów (takie same jak w pozostałych stronach)
+const BTN_S = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-slate-300 bg-white text-slate-900 hover:bg-slate-50';
+const BTN_D = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 border-red-600 bg-red-600 text-white hover:brightness-95';
+const CHIP = 'inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors';
+const CHIP_ON = 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700';
+const CHIP_OFF = 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900';
 const ZAKRESY = {
-  maszyna: { nazwa: 'Maszyna', klasa: 'bg-sky-50 text-sky-700 border-sky-200' },
-  grupa:   { nazwa: 'Grupa',   klasa: 'bg-amber-50 text-amber-700 border-amber-200' },
-  ogolne:  { nazwa: 'Ogólne',  klasa: 'bg-slate-100 text-slate-600 border-slate-200' }
+  maszyna: { nazwa: 'Maszyna', klasa: 'bg-sky-100 text-sky-800' },
+  grupa:   { nazwa: 'Grupa',   klasa: 'bg-amber-100 text-amber-800' },
+  ogolne:  { nazwa: 'Ogólne',  klasa: 'bg-slate-100 text-slate-600' }
 };
 
 // ===== Stan =====
@@ -133,7 +156,8 @@ const db = supabase.createClient(SB_URL, SB_KEY);
 let dane = [];
 let filtr = 'wszystkie';
 let edytowaneId = null;
-const otwarte = new Set();   // id rozwiniętych kafelków
+const otwarte = new Set(); // id rozwiniętych kafelków
+
 const $ = (id) => document.getElementById(id);
 
 // Escapowanie danych użytkownika
@@ -142,6 +166,42 @@ function esc(t) {
 }
 function pokaz(el, tekst) { el.textContent = tekst; el.classList.remove('hidden'); }
 function ukryj(el) { el.classList.add('hidden'); }
+
+// Toast (zamiast alert)
+let toastT;
+function toast(msg, ms = 2500) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('opacity-100', '!translate-y-0');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('opacity-100', '!translate-y-0'), ms);
+}
+
+// Okno potwierdzenia (zamiast confirm)
+function askConfirm(msg, okLabel = 'OK') {
+  const dlg = $('cfmModal');
+  $('cfmMsg').textContent = msg;
+  $('cfmOk').textContent = okLabel;
+  return new Promise((resolve) => {
+    let ok = false;
+    const onClose = () => { dlg.removeEventListener('close', onClose); resolve(ok); };
+    $('cfmOk').onclick = () => { ok = true; dlg.close(); };
+    $('cfmNo').onclick = () => dlg.close();
+    dlg.addEventListener('close', onClose);
+    dlg.showModal();
+  });
+}
+$('cfmModal').addEventListener('click', (e) => { if (e.target === $('cfmModal')) $('cfmModal').close(); });
+
+// ===== Widok: logowanie / aplikacja =====
+function setSession(sesja) {
+  const on = !!sesja;
+  $('auth').classList.toggle('hidden', on);
+  $('app').classList.toggle('hidden', !on);
+  $('sessionActions').classList.toggle('hidden', !on);
+  $('userBox').classList.toggle('hidden', !on);
+  $('u-email').textContent = on ? (sesja.user.email || '') : '';
+}
 
 // ===== Logowanie (konta zakłada administrator w Supabase) =====
 $('a-wyslij').onclick = async () => {
@@ -157,13 +217,9 @@ $('a-haslo').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('a-wy
 $('b-wyloguj').onclick = () => db.auth.signOut();
 
 db.auth.onAuthStateChange((_ev, sesja) => {
-  if (sesja) {
-    $('auth').classList.add('hidden'); $('app').classList.remove('hidden');
-    $('u-email').textContent = sesja.user.email;
-    laduj();
-  } else {
-    dane = []; $('app').classList.add('hidden'); $('auth').classList.remove('hidden');
-  }
+  setSession(sesja);
+  if (sesja) laduj();
+  else { dane = []; $('a-haslo').value = ''; }
 });
 
 // ===== Dane =====
@@ -181,13 +237,13 @@ function rysuj() {
     if (!q) return true;
     return [r.tytul, r.cel, r.problem, r.kroki, r.tagi].join(' ').toLowerCase().includes(q);
   });
+  $('licznik').textContent = wyniki.length + ' z ' + dane.length + ' rozwiązań';
 
   // Filtry z licznikami
   const opcje = [['wszystkie', 'Wszystkie'], ['maszyna', 'Maszyny'], ['grupa', 'Grupy'], ['ogolne', 'Ogólne']];
   $('filtry').innerHTML = opcje.map(([k, n]) => {
     const ile = k === 'wszystkie' ? dane.length : dane.filter((r) => r.zakres === k).length;
-    const akt = filtr === k ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50';
-    return `<button data-filtr="${k}" class="rounded-full border px-3 py-1 text-sm ${akt}">${n} (${ile})</button>`;
+    return `<button type="button" data-filtr="${k}" class="${CHIP} ${filtr === k ? CHIP_ON : CHIP_OFF}">${n} ${ile}</button>`;
   }).join('');
 
   // Rozwijane kafelki
@@ -196,25 +252,25 @@ function rysuj() {
     const kroki = r.kroki.split('\n').map((s) => s.trim()).filter(Boolean);
     const tagi = r.tagi.split(',').map((s) => s.trim()).filter(Boolean);
     const otw = otwarte.has(r.id);
-    return `<article class="min-w-0 bg-white border border-slate-200 rounded-xl shadow-sm">
-      <button data-toggle="${r.id}" aria-expanded="${otw}" class="w-full flex items-start justify-between gap-3 p-4 text-left rounded-xl hover:bg-slate-50">
+    return `<article class="min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm">
+      <button type="button" data-toggle="${r.id}" aria-expanded="${otw}" class="flex w-full items-start justify-between gap-3 rounded-xl p-4 text-left hover:bg-slate-50">
         <div class="min-w-0 space-y-1.5">
-          <h3 class="font-semibold text-slate-900 break-words">${esc(r.tytul)}</h3>
+          <h3 class="break-words font-semibold text-slate-900">${esc(r.tytul)}</h3>
           <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full border px-2 py-0.5 text-xs ${z.klasa}">${z.nazwa}</span>
-            ${r.cel ? `<span class="text-sm text-slate-500 break-words">${esc(r.cel)}</span>` : ''}
+            <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium leading-none ${z.klasa}">${z.nazwa}</span>
+            ${r.cel ? `<span class="break-words text-sm text-slate-600">${esc(r.cel)}</span>` : ''}
             ${kroki.length ? `<span class="text-xs text-slate-400">${kroki.length} kr.</span>` : ''}
           </div>
         </div>
-        <svg class="w-5 h-5 shrink-0 text-slate-400 mt-0.5 transition-transform ${otw ? 'rotate-180' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-slate-400 transition-transform ${otw ? 'rotate-180' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
       </button>
-      ${otw ? `<div class="border-t border-slate-200 p-4 space-y-4">
-        ${r.problem ? `<p class="text-sm text-slate-600 whitespace-pre-line break-words">${esc(r.problem)}</p>` : ''}
-        ${kroki.length ? `<ol class="kroki space-y-2">${kroki.map((s) => `<li class="flex gap-2 text-sm"><span class="krok-nr shrink-0 w-5 h-5 rounded-full bg-blue-50 text-blue-700 text-xs flex items-center justify-center mt-0.5"></span><span class="min-w-0 break-words">${esc(s)}</span></li>`).join('')}</ol>` : ''}
-        ${tagi.length ? `<div class="flex flex-wrap gap-1.5">${tagi.map((t) => `<span class="rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 text-xs">#${esc(t)}</span>`).join('')}</div>` : ''}
+      ${otw ? `<div class="space-y-4 border-t border-slate-200 p-4">
+        ${r.problem ? `<p class="whitespace-pre-line break-words text-sm text-slate-600">${esc(r.problem)}</p>` : ''}
+        ${kroki.length ? `<ol class="kroki space-y-2">${kroki.map((s) => `<li class="flex gap-2 text-sm"><span class="krok-nr mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs text-blue-700"></span><span class="min-w-0 break-words">${esc(s)}</span></li>`).join('')}</ol>` : ''}
+        ${tagi.length ? `<div class="flex flex-wrap gap-1.5">${tagi.map((t) => `<span class="inline-flex items-center rounded-md bg-slate-200 px-2 py-1 text-[11px] font-medium leading-none text-slate-900">#${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="flex justify-end gap-2">
-          <button data-edytuj="${r.id}" class="rounded-lg px-4 py-2 text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">Edytuj</button>
-          <button data-usun="${r.id}" class="rounded-lg px-4 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700">Usuń</button>
+          <button type="button" data-edytuj="${r.id}" class="${BTN_S}">Edytuj</button>
+          <button type="button" data-usun="${r.id}" class="${BTN_D}">Usuń</button>
         </div>
       </div>` : ''}
     </article>`;
@@ -239,9 +295,9 @@ $('lista').addEventListener('click', async (e) => {
   const ed = e.target.closest('[data-edytuj]'), us = e.target.closest('[data-usun]'), tg = e.target.closest('[data-toggle]');
   if (ed) return otworzModal(dane.find((r) => r.id === ed.dataset.edytuj));
   if (us) {
-    if (!confirm('Usunąć to rozwiązanie? Tej operacji nie można cofnąć.')) return;
+    if (!(await askConfirm('Usunąć to rozwiązanie? Tej operacji nie można cofnąć.', 'Usuń'))) return;
     const { error } = await db.from(TABELA).delete().eq('id', us.dataset.usun);
-    if (error) alert('Nie udało się usunąć: ' + error.message); else laduj();
+    if (error) toast('Nie udało się usunąć: ' + error.message, 4000); else { toast('Usunięto'); laduj(); }
     return;
   }
   if (tg) {
@@ -254,6 +310,7 @@ $('lista').addEventListener('click', async (e) => {
 // ===== Modal =====
 function ustawCel() { $('f-cel-box').classList.toggle('hidden', $('f-zakres').value === 'ogolne'); }
 $('f-zakres').onchange = ustawCel;
+
 function otworzModal(r) {
   edytowaneId = r ? r.id : null;
   $('m-tytul').textContent = r ? 'Edytuj rozwiązanie' : 'Nowe rozwiązanie';
@@ -261,13 +318,11 @@ function otworzModal(r) {
   $('f-cel').value = r?.cel || ''; $('f-problem').value = r?.problem || '';
   $('f-kroki').value = r?.kroki || ''; $('f-tagi').value = r?.tagi || '';
   ukryj($('m-blad')); ustawCel();
-  $('modal').classList.remove('hidden'); $('f-tytul').focus();
+  $('modal').showModal();
+  setTimeout(() => $('f-tytul').focus(), 50);
 }
-function zamknijModal() { $('modal').classList.add('hidden'); }
 $('b-dodaj').onclick = () => otworzModal(null);
-$('m-anuluj').onclick = zamknijModal;
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') zamknijModal(); });
-$('modal').addEventListener('mousedown', (e) => { if (e.target === $('modal') || e.target.parentElement === $('modal')) zamknijModal(); });
+$('m-anuluj').onclick = () => $('modal').close();
 
 $('form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -281,10 +336,12 @@ $('form').addEventListener('submit', async (e) => {
   $('m-zapisz').disabled = true;
   const { error } = edytowaneId
     ? await db.from(TABELA).update(rekord).eq('id', edytowaneId)
-    : await db.from(TABELA).insert(rekord);   // user_id uzupełnia baza (auth.uid())
+    : await db.from(TABELA).insert(rekord); // user_id uzupełnia baza (auth.uid())
   $('m-zapisz').disabled = false;
   if (error) return pokaz($('m-blad'), 'Nie udało się zapisać: ' + error.message);
-  zamknijModal(); laduj();
+  $('modal').close();
+  toast(edytowaneId ? 'Zapisano zmiany' : 'Dodano rozwiązanie');
+  laduj();
 });
 
 // ===== Start =====
